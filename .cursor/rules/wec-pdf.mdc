@@ -1,0 +1,383 @@
+---
+alwaysApply: true
+keep
+---
+Rules: WeCoverUSA — Policy PDF Assembly (Node + React)
+0) Scope & Goal (do not deviate)
+
+Produce one final PDF per policy by merging three sections in order:
+
+Filled AcroForm PDF (dynamic fields: customer, vehicle, pricing, signatures)
+
+Policy Terms/Contract (product-specific, versioned HTML → PDF)
+
+State Disclosure(s) (state-specific, versioned HTML → PDF; may be multiple pages)
+
+Back end: Node.js (Fastify) + pdf-lib + Playwright.
+Front end: React + TypeScript + React Hook Form + Zod + PDF.js.
+Storage: PostgreSQL (metadata) + S3-compatible (templates & generated PDFs; MinIO in dev).
+
+Always keep the first page as the filled AcroForm; then Terms; then Disclosures.
+
+1) Repository Layout (generate exactly these paths)
+/apps
+  /web                     # React app (Next.js or Vite) + TS
+  /api                     # Fastify service
+    /src
+      /routes
+        policies.routes.ts
+        templates.routes.ts
+      /modules
+        /policies
+          assembler/merge.ts
+          filler/fillAcroForm.ts
+          filler/mapping.ts
+          renderer/renderHtmlToPdf.ts
+          service/policies.service.ts
+        /templates
+          service/templates.service.ts
+        /storage/s3.ts
+        /db/index.ts
+      /types/index.d.ts
+    /migrations            # if not using Prisma
+    /prisma                # if using Prisma
+/packages
+  /shared
+    policySchemas.ts       # Zod schemas shared by web+api
+  /cli
+    seed-templates.ts
+/assets
+  /html-templates
+    /terms/WEC-PS-VSC-09-2025/en-US.html
+    /disclosures/FL/2025-09/en-US.html
+    /disclosures/TX/2025-09/en-US.html
+
+
+Rule: Prefer plain SQL migrations under /apps/api/migrations unless a Prisma schema is already present.
+
+2) Tech & Dependencies (pin these libs)
+
+API (Node LTS)
+
+fastify, fastify-plugin, fastify-cors
+
+pdf-lib
+
+playwright (Chromium)
+
+pg, drizzle-orm or prisma (choose one; default to Drizzle if none present)
+
+zod, zod-to-json-schema
+
+aws-sdk or @aws-sdk/client-s3 (prefer v3)
+
+dotenv, pino
+
+Web
+
+React (Next.js or Vite) + TypeScript
+
+react-hook-form, @hookform/resolvers, zod
+
+PDF viewer: pdfjs-dist + simple wrapper component
+
+Dev
+
+concurrently, tsx or ts-node, nodemon
+
+esbuild or tsup for API bundling (optional)
+
+3) Environment Variables (create .env samples)
+
+API .env
+
+NODE_ENV=development
+PORT=5173
+DATABASE_URL=postgres://user:pass@localhost:5432/wecover
+S3_ENDPOINT=http://127.0.0.1:9000
+S3_ACCESS_KEY=minioadmin
+S3_SECRET_KEY=minioadmin
+S3_BUCKET=wecover-pdfs
+S3_REGION=us-east-1
+PRODUCT_VERSION=WEC-PS-VSC-09-2025
+PDF_TEMPLATE_KEY=templates/ContractPSVSCTemplate_HT_v07_Form.pdf
+
+
+Web .env
+
+VITE_API_BASE_URL=http://localhost:5173
+
+
+Rules
+
+Use MinIO in dev; AWS S3 in prod.
+
+All generated PDFs go to policies/{YYYY}/{MM}/{policyNumber}.pdf.
+
+4) Database Model (PostgreSQL, minimal)
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+CREATE TABLE IF NOT EXISTS policy (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  policy_number TEXT UNIQUE NOT NULL,
+  product_version TEXT NOT NULL,
+  state_code TEXT NOT NULL,                 -- e.g., FL
+  term_months INT NOT NULL CHECK (term_months IN (72,84,96)),
+  commercial BOOLEAN NOT NULL DEFAULT FALSE,
+  effective_date DATE NOT NULL,
+  expiration_date DATE NOT NULL,
+  contract_price NUMERIC(12,2) NOT NULL,
+  sale_price NUMERIC(12,2),
+  payload JSONB NOT NULL,                   -- validated request
+  pdf_key TEXT,                             -- S3 key for final merged PDF
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS html_template (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  kind TEXT NOT NULL CHECK (kind IN ('terms','disclosure')),
+  product_version TEXT,                     -- for terms
+  state_code TEXT,                          -- for disclosure
+  language TEXT NOT NULL DEFAULT 'en-US',
+  version_tag TEXT NOT NULL,                -- e.g., 2025-09
+  s3_key TEXT NOT NULL,                     -- S3 path to HTML
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_html_tmpl ON html_template(kind, product_version, state_code, language, version_tag);
+
+5) Shared Types (generate exactly)
+
+/packages/shared/policySchemas.ts
+
+Define OwnerSchema, CoOwnerSchema, DealerSchema, VehicleSchema, CoverageSchema, LenderSchema, PolicyCreateSchema using Zod.
+
+termMonths is z.enum(["72","84","96"]).transform(Number).
+
+Optional customerSignaturePngBase64 as Base64 PNG.
+
+6) API Contracts
+Routes
+POST   /policies                 -> create & assemble; returns { id, policyNumber, pdfUrl }
+GET    /policies/:id             -> metadata + signed URL
+GET    /templates/terms          -> list terms templates
+GET    /templates/disclosures    -> list disclosure templates
+POST   /templates/terms          -> upload/replace a terms HTML template
+POST   /templates/disclosures    -> upload/replace a disclosure HTML template
+
+Behavior
+
+Validate POST /policies body with Zod (server-side).
+
+Pipeline:
+
+Load master AcroForm template from S3 via PDF_TEMPLATE_KEY
+
+Fill fields via pdf-lib using mapping file (see §7)
+
+Render Terms HTML → PDF (by productVersion) using Playwright
+
+Render Disclosure(s) HTML → PDF (by stateCode, latest version_tag)
+
+Merge PDFs in order: FilledForm → Terms → Disclosures
+
+Upload final to S3, persist policy
+
+Return pre-signed URL
+
+Support ?dryRun=true to build and return a temporary merged PDF (not persisted).
+
+7) AcroForm Field Mapping (create this file)
+
+/apps/api/src/modules/policies/filler/mapping.ts
+
+Export toAcroFields(payload) that returns an object mapping known field names in the template to values from PolicyCreateSchema.
+
+Include (at minimum) these names and behavior:
+
+Text_Contract_Number
+
+Text_Owner_Firstname, Text_Owner_Lastname, Text_Owner_Address, Text_Owner_City, Text_Owner_State, Text_Owner_ZipCode, Text_Owner_Phone, Text_Owner_Email
+
+Text_Co-Owner_Name, Text_Co-Owner_Address, Text_Co-Owner_City, Text_Co-Owner_state, Text_Co-Owner_ZipCode, Text_Co-Owner_Phone, Text_Co-Owner_Email
+
+Text_Dealer_ID, Text_Dealer_Name, Text_Dealer_Address, Text_Dealer_City, Text_Dealer_State, Text_Dealer_ZipCode, Text_Dealer_Phone, Text_Dealer_Sale_Name
+
+Text_Vehicle_ID, Text_Vehicle_Year, Text_Vehicle_Make, Text_Vehicle_Model, Text_Vehicle_Mileage, Text_Vehicle_Sale_Price
+
+Text_Contract_Purchase_Date, Text_ExpirationDate, Text_Contract_Price
+
+Checkbox toggles: Term_72m, Term_84m, Term_96m → set "On" for selected, "Off" for others
+
+LossCode_COMMERCIAL → "On" if coverage.commercial === true else "Off"
+
+Lender: Text_Lender_Name, Text_Lender_Address, Text_Lender_City_Sate_Zip
+
+Leave CustomerSignature empty; we overlay the signature image (see §8).
+
+8) Filler, Renderer, Merger (generate these)
+
+Filler /apps/api/src/modules/policies/filler/fillAcroForm.ts
+
+Load base template bytes from S3
+
+Fill text/checkbox fields
+
+If customerSignaturePngBase64 present: embed PNG and draw on page 1 at coordinates { x: 360, y: 120, width: 140, height: 40 } (make consts)
+
+form.updateFieldAppearances(), return Uint8Array
+
+Renderer /apps/api/src/modules/policies/renderer/renderHtmlToPdf.ts
+
+Use playwright.chromium
+
+page.setContent(html, { waitUntil: "networkidle" })
+
+page.pdf({ printBackground: true, format: "Letter", margin: { top: "0.5in", bottom: "0.5in", left: "0.5in", right: "0.5in" } })
+
+Merger /apps/api/src/modules/policies/assembler/merge.ts
+
+Create new doc; copy pages from sources in order; return Uint8Array
+
+9) Templates (Terms/Disclosures)
+
+Store editable HTML under /assets/html-templates/... and mirror these to S3 with seed-templates.ts.
+
+DB selection rules:
+
+Terms: kind='terms' AND product_version=$PRODUCT_VERSION AND language='en-US' ORDER BY created_at DESC LIMIT 1
+
+Disclosures: kind='disclosure' AND state_code=$state AND language='en-US' ORDER BY created_at DESC LIMIT 1
+
+Minimal HTML example (generate once):
+
+<!doctype html><html><head>
+<meta charset="utf-8"><title>Terms</title>
+<style>body{font-family:Arial,Helvetica,sans-serif;font-size:12pt;line-height:1.35}</style>
+</head><body>
+<h1 style="font-size:16pt;margin-bottom:6pt">VEHICLE SERVICE CONTRACT – TERMS AND CONDITIONS</h1>
+<p>Product Version: {{productVersion}}</p>
+<p>Policy Number: {{policyNumber}}</p>
+<hr>
+<p>[Terms content…]</p>
+</body></html>
+
+
+For rendering, replace {{…}} tokens server-side with safe values before calling renderHtmlToPdf.
+
+10) Web App (React)
+
+Build a single form using react-hook-form with ZodResolver based on PolicyCreateSchema.
+
+Term selection shown as checkbox set (72/84/96) — ensure only one can be active (control logic).
+
+Commercial/Farm Use as checkbox → maps to coverage.commercial.
+
+State selector (2-letter).
+
+Preview button → POST /policies?dryRun=true → show merged PDF in PDF.js viewer.
+
+Submit button → POST /policies → show final pdfUrl and “Download” link.
+
+Create:
+
+/apps/web/src/components/PolicyForm.tsx
+
+/apps/web/src/components/PdfViewer.tsx (PDF.js wrapper)
+
+/apps/web/src/pages/policies/new.tsx (or /routes/new in Vite/React Router)
+
+11) Commands & Dev UX
+
+Root package.json scripts (pnpm preferred):
+
+{
+  "scripts": {
+    "dev": "concurrently -n API,WEB \"pnpm --filter @wec/api dev\" \"pnpm --filter @wec/web dev\"",
+    "build": "pnpm -r build",
+    "db:migrate": "node apps/api/migrations/run.js",
+    "seed:templates": "tsx packages/cli/seed-templates.ts",
+    "test": "vitest run"
+  }
+}
+
+
+API package.json:
+
+dev: nodemon --watch src --exec tsx src/index.ts
+
+Playwright note: add postinstall "playwright install chromium" or document manual install.
+
+12) Security & Compliance Rules
+
+Validate all inputs server-side with Zod; strip unknown keys.
+
+Generate pre-signed S3 URLs for any PDF download.
+
+Store original payload in policy.payload; avoid logging PII.
+
+Optionally encrypt sensitive fields at rest.
+
+Include productVersion, template IDs, and stateCode used in assembly in the policy record for audit.
+
+13) Auth (optional)
+
+If Cognito/Auth0/Clerk is present, inject dealerId from claim custom:dealer_id server-side (do not trust client input).
+
+Otherwise leave unauthenticated for internal environments.
+
+14) Testing Requirements
+
+Unit: mapping correctness; checkboxes on/off by selected term; date calcs.
+
+Integration: full pipeline yields merged PDF with pageCount >= 2.
+
+Golden files: compare structural invariants (page count, text snippets); ignore metadata timestamps.
+
+15) Acceptance Criteria (Cursor must verify)
+
+POST /policies returns { id, policyNumber, pdfUrl }, HTTP 200.
+
+First page: filled AcroForm; then Terms; then Disclosure(s).
+
+Switching productVersion or stateCode selects different HTML templates and changes output accordingly.
+
+Final PDF stored under policies/{YYYY}/{MM}/{policyNumber}.pdf.
+
+16) DO / DON’T
+
+DO
+
+Keep modules small (filler, renderer, merger, storage, db, service).
+
+Use environment variables; no hardcoded secrets.
+
+Provide seed scripts for templates & a sample payload.
+
+DON’T
+
+Don’t reorder PDF sections.
+
+Don’t embed remote fonts; keep HTML lean for stable PDF output.
+
+Don’t put tokens in client code or logs.
+
+17) Few-Shot Tasks for Cursor (generate when asked)
+
+Scaffold API and Web with the exact structure above, including placeholder files and working dev scripts.
+
+Implement fillAcroForm.ts with text + checkbox support and signature overlay drawing at constants SIGN_X=360, SIGN_Y=120, SIGN_W=140, SIGN_H=40.
+
+Create renderHtmlToPdf.ts using Playwright Chromium.
+
+Create merge.ts that merges buffers in order.
+
+Add /policies route: validate body → pipeline → return URL.
+
+Add /templates/* routes to upload/list templates & write DB rows.
+
+Seed CLI: upload /assets/html-templates/** to S3, insert html_template rows.
+
+React Form & PDF Viewer wired to these APIs with preview and submit flows.
+
+End of rules.

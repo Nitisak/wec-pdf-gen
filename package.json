@@ -1,0 +1,36 @@
+{
+  "name": "wec-pdf-generator",
+  "version": "1.0.0",
+  "description": "WeCoverUSA Policy PDF Assembly System",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n API,WEB \"pnpm --filter @wec/api dev\" \"pnpm --filter @wec/web dev\"",
+    "build": "pnpm -r build",
+    "db:migrate": "node apps/api/migrations/run.js",
+    "seed:templates": "tsx packages/cli/seed-templates.ts",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.0.0",
+    "concurrently": "^8.2.0",
+    "eslint": "^8.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

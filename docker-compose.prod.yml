@@ -1,0 +1,121 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: wec-postgres-prod
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-wecover}
+      POSTGRES_USER: ${POSTGRES_USER:-wecuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wecuser} -d ${POSTGRES_DB:-wecover}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wec-prod-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+
+  # API Service
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: wec-api-prod
+    environment:
+      NODE_ENV: production
+      PORT: 5173
+      HOST: 0.0.0.0
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgres://${POSTGRES_USER:-wecuser}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-wecover}
+      S3_ENDPOINT: ${S3_ENDPOINT:?S3_ENDPOINT is required}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?S3_ACCESS_KEY is required}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?S3_SECRET_KEY is required}
+      S3_BUCKET: ${S3_BUCKET:-wecover-pdfs}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      PRODUCT_VERSION: ${PRODUCT_VERSION:-WEC-PS-VSC-09-2025}
+      PDF_TEMPLATE_KEY: ${PDF_TEMPLATE_KEY:-templates/ContractPSVSCTemplate_HT_v07_Form.pdf}
+      PLAYWRIGHT_CHROMIUM_EXECUTABLE: /usr/bin/chromium-browser
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://yourdomain.com}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - wec-prod-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+      replicas: 2
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5173/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Web Application
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: wec-web-prod
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - wec-prod-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  # Nginx Reverse Proxy (Optional - use your own if available)
+  nginx:
+    image: nginx:alpine
+    container_name: wec-nginx-prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - web
+      - api
+    networks:
+      - wec-prod-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 256M
+
+networks:
+  wec-prod-network:
+    driver: bridge
+
+volumes:
+  postgres_prod_data:
+    driver: local
+
