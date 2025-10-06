@@ -1,6 +1,8 @@
 import { PolicyCreate } from '@wec/shared/policySchemas';
 
-export const toAcroFields = (p: PolicyCreate) => ({
+export const toAcroFields = (p: PolicyCreate) => {
+  console.log('toAcroFields input:', JSON.stringify({ termMonths: p.coverage.termMonths, commercial: p.coverage.commercial }));
+  return {
   Text_Contract_Number: p.policyNumber,
   Text_Owner_Firstname: p.owner.firstName,
   Text_Owner_Lastname: p.owner.lastName,
@@ -39,9 +41,9 @@ export const toAcroFields = (p: PolicyCreate) => ({
   Text_ExpirationDate: p.coverage.expirationDate,
   Text_Contract_Price: p.coverage.contractPrice.toFixed(2),
 
-  Term_72m: p.coverage.termMonths,
-  Term_84m: p.coverage.termMonths,
-  Term_96m: p.coverage.termMonths,
+  Term_72m: Number(p.coverage.termMonths)===72 ? "On" : "Off",
+  Term_84m: Number(p.coverage.termMonths)===84 ? "On" : "Off",
+  Term_96m: Number(p.coverage.termMonths)===96 ? "On" : "Off",
   LossCode_COMMERCIAL: p.coverage.commercial ? "On" : "Off",
 
   Text_Lender_Name: p.lender?.name ?? "",
@@ -49,4 +51,5 @@ export const toAcroFields = (p: PolicyCreate) => ({
   Text_Lender_City_Sate_Zip: p.lender?.cityStateZip ?? "",
 
   CustomerSignature: "" // Acro text stays empty; we overlay PNG at coords in filler
-});
+  };
+};

@@ -13,7 +13,7 @@ export async function fillAcroForm(payload: PolicyCreate): Promise<Uint8Array> {
   const pdfBytes = await getS3Object(process.env.PDF_TEMPLATE_KEY!);
   const pdfDoc = await PDFDocument.load(pdfBytes);
   const form = pdfDoc.getForm();
-  console.log(`fillAcroForm payload ${payload}`);
+  //console.log(`fillAcroForm payload ${payload}`);
   
   const fields = toAcroFields(payload);
   console.log(`fillAcroForm fields ${JSON.stringify(fields)}`);
@@ -47,24 +47,6 @@ export async function fillAcroForm(payload: PolicyCreate): Promise<Uint8Array> {
           checkbox.uncheck();
           console.log(`  Unchecked: ${name} ${value}`);
         }
-        
-          if(name === 'Term_72m' && value === '72') {
-            checkbox.check();
-            //checkbox.enableReadOnly(); // Lock the checkbox state
-            console.log(`✓ Checked: ${name}`);
-          }
-          if(name === 'Term_84m' && value === '84') {
-            checkbox.check();
-           // checkbox.enableReadOnly(); // Lock the checkbox state
-            console.log(`✓ Checked: ${name}`);
-          }
-          if(name === 'Term_96m' && value === '96') {
-            checkbox.check();
-           // checkbox.enableReadOnly(); // Lock the checkbox state
-            console.log(`✓ Checked: ${name}`);
-          }
-          checkbox.enableReadOnly(); // Lock the checkbox state
-          console.log(`✓ Checked: ${name}`);
         
         continue;
       } catch (e) {

@@ -33,9 +33,9 @@ export declare const toAcroFields: (p: PolicyCreate) => {
     Text_Contract_Purchase_Date: string;
     Text_ExpirationDate: string;
     Text_Contract_Price: string;
-    Term_72m: number;
-    Term_84m: number;
-    Term_96m: number;
+    Term_72m: string;
+    Term_84m: string;
+    Term_96m: string;
     LossCode_COMMERCIAL: string;
     Text_Lender_Name: string;
     Text_Lender_Address: string;
