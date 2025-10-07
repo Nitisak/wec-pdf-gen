@@ -3,9 +3,8 @@ import { getDatabase } from '../../db/index.js';
 import { policy, htmlTemplate } from '../../db/schema.js';
 import { PolicyCreate } from '@wec/shared/policySchemas';
 import { fillAcroForm } from '../filler/fillAcroForm.js';
-import { renderTermsToPdf, renderDisclosureToPdf } from '../../templates/service/templates.service.js';
 import { mergePdfs } from '../assembler/merge.js';
-import { putS3Object, generatePolicyPdfKey, getSignedDownloadUrl } from '../../storage/s3.js';
+import { putS3Object, generatePolicyPdfKey, getSignedDownloadUrl, getS3Object } from '../../storage/s3.js';
 
 export async function createPolicy(payload: PolicyCreate, dryRun: boolean = false) {
   const db = getDatabase();
@@ -108,11 +107,11 @@ async function assemblePolicyPdf(payload: PolicyCreate): Promise<Uint8Array> {
   console.log(`assemblePolicyPdf payload  ${payload}`);
   const filledForm = await fillAcroForm(payload);
   
-  // 2. Render Terms
-  const termsPdf = await renderTermsToPdf(payload.productVersion, payload.policyNumber);
+  // 2. Load Terms PDF (static PDF file, no rendering needed)
+  const termsPdf = await loadTermsPdf();
   
-  // 3. Render Disclosures
-  const disclosurePdf = await renderDisclosureToPdf(payload.stateCode);
+  // 3. Load Disclosure PDF (static PDF file, no rendering needed)
+  const disclosurePdf = await loadDisclosurePdf();
   
   // 4. Merge PDFs in order: Filled Form → Terms → Disclosures
   const mergedPdf = await mergePdfs([filledForm, termsPdf, disclosurePdf]);
@@ -124,4 +123,16 @@ function generatePolicyNumber(stateCode: string): string {
   const timestamp = Date.now().toString().slice(-6);
   const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
   return `WEC-${stateCode}-2025-${timestamp}${random}`;
+}
+
+async function loadTermsPdf(): Promise<Uint8Array> {
+  // Load the static Terms PDF from S3
+  const termsKey = process.env.PDF_TERMS_KEY || 'templates/ContractPSVSCTemplate_HT_v07_02.pdf';
+  return await getS3Object(termsKey);
+}
+
+async function loadDisclosurePdf(): Promise<Uint8Array> {
+  // Load the static Disclosure PDF from S3
+  const disclosureKey = process.env.PDF_DISCLOSURE_KEY || 'templates/ContractPSVSCTemplate_HT_v07_03.pdf';
+  return await getS3Object(disclosureKey);
 }

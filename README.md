@@ -1,301 +1,228 @@
-# WeCover USA - Policy PDF Assembly System
+# WeCoverUSA — Policy PDF Generator
 
-A comprehensive system for generating vehicle service contract policies by merging AcroForm PDFs with dynamic terms and state-specific disclosures.
+A monorepo application for generating vehicle service contract policy PDFs by merging fillable AcroForms with contract terms and state disclosures.
 
-## Features
+## 🚀 Quick Start
 
-- **Dynamic PDF Assembly**: Merges filled AcroForm, terms, and state disclosures into a single PDF
-- **AcroForm Filling**: Uses pdf-lib to fill PDF form fields with customer data
-- **HTML to PDF Rendering**: Uses Playwright to convert HTML templates to PDF
-- **State-Specific Disclosures**: Automatically includes state-specific disclosure pages
-- **Template Management**: Admin interface for managing terms and disclosure templates
-- **Preview Mode**: Generate preview PDFs without persisting to database
-- **S3 Storage**: Scalable storage for templates and generated PDFs
-
-## Tech Stack
-
-- **Backend**: Node.js + Fastify + TypeScript
-- **Frontend**: React + TypeScript + Vite
-- **PDF Processing**: pdf-lib + Playwright
-- **Database**: PostgreSQL + Drizzle ORM
-- **Storage**: S3-compatible (MinIO for dev, AWS S3 for prod)
-- **Validation**: Zod schemas
-
-## Quick Start
-
-### Prerequisites
-
-- **Docker**: Docker Engine 20.10+ and Docker Compose 2.0+
-- **Make** (optional, for convenience commands)
-
-### Option 1: Docker (Recommended - Full Stack)
-
-Run the entire application stack with Docker:
-
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd wec-pdf-generator
-   ```
-
-2. **Upload PDF template to MinIO**:
-   ```bash
-   # First, start just MinIO to upload the template
-   make dev-up
-   
-   # Go to MinIO Console at http://localhost:9001
-   # Login: minioadmin / minioadmin
-   # Create bucket 'wecover-pdfs' (or it auto-creates)
-   # Upload ContractPSVSCTemplate_HT_v07_Form.pdf to:
-   # templates/ContractPSVSCTemplate_HT_v07_Form.pdf
-   ```
-
-3. **Build and start all services**:
-   ```bash
-   make build
-   make up
-   ```
-
-4. **Run database migrations** (after services are up):
-   ```bash
-   make migrate
-   ```
-
-5. **Seed HTML templates**:
-   ```bash
-   make seed
-   ```
-
-**Access the application**:
-- **Web App**: http://localhost
-- **API**: http://localhost:5173
-- **MinIO Console**: http://localhost:9001
-
-**Useful Docker commands**:
 ```bash
-make logs        # View all logs
-make logs-api    # View API logs only
-make logs-web    # View web logs only
-make ps          # Show running containers
-make health      # Check service health
-make down        # Stop all services
-make clean       # Remove everything (containers, volumes, images)
+# Start all services
+docker-compose up -d
+
+# Wait for services to be healthy (~30 seconds)
+docker-compose ps
+
+# Test the API
+curl http://localhost:5173/health
 ```
 
-### Option 2: Local Development (Partial Docker)
-
-Run only infrastructure (PostgreSQL + MinIO) in Docker, and run API/Web locally:
-
-1. **Clone and install dependencies**:
-   ```bash
-   git clone <repository-url>
-   cd wec-pdf-generator
-   pnpm install
-   ```
-
-2. **Start infrastructure services**:
-   ```bash
-   make dev-up
-   ```
-
-3. **Set up environment variables**:
-   ```bash
-   # Copy API environment file
-   cp apps/api/env.example apps/api/.env
-   
-   # Copy web environment file  
-   cp apps/web/env.example apps/web/.env
-   ```
-
-4. **Run database migrations**:
-   ```bash
-   pnpm db:migrate
-   ```
-
-5. **Upload PDF template to MinIO**:
-   ```bash
-   # Upload the AcroForm template to MinIO console at http://localhost:9001
-   # Place it at: templates/ContractPSVSCTemplate_HT_v07_Form.pdf
-   ```
-
-6. **Seed HTML templates**:
-   ```bash
-   pnpm seed:templates
-   ```
-
-7. **Install Playwright**:
-   ```bash
-   cd apps/api
-   npx playwright install chromium
-   ```
-
-8. **Start development servers**:
-   ```bash
-   pnpm dev
-   ```
-
-**Access the application**:
+The application will be available at:
 - **API**: http://localhost:5173
-- **Web**: http://localhost:3000
-- **MinIO Console**: http://localhost:9001
+- **Web**: http://localhost
+- **MinIO Console**: http://localhost:9001 (minioadmin/minioadmin)
 
-## Project Structure
+## 🏗️ Architecture
+
+### Services
+- **API** (Fastify + Node.js): PDF generation and policy management
+- **Web** (React + TypeScript): Policy form and PDF preview
+- **PostgreSQL**: Policy metadata storage
+- **MinIO**: S3-compatible object storage for PDFs
+
+### PDF Pipeline
 
 ```
-/apps
-  /web                     # React app (Vite + TypeScript)
-  /api                     # Fastify service
-    /src
-      /routes
-        policies.routes.ts
-        templates.routes.ts
-      /modules
-        /policies
-          assembler/merge.ts
-          filler/fillAcroForm.ts
-          filler/mapping.ts
-          renderer/renderHtmlToPdf.ts
-          service/policies.service.ts
-        /templates
-          service/templates.service.ts
-        /storage/s3.ts
-        /db/index.ts
-      /types/index.d.ts
-    /migrations            # SQL migrations
-/packages
-  /shared
-    policySchemas.ts       # Zod schemas shared by web+api
-  /cli
-    seed-templates.ts
-/assets
-  /html-templates
-    /terms/WEC-PS-VSC-09-2025/en-US.html
-    /disclosures/FL/2025-09/en-US.html
-    /disclosures/TX/2025-09/en-US.html
+1. Fill AcroForm → 2. Merge Terms PDF → 3. Merge Disclosure PDF → 4. Final Policy PDF
+   (3 pages)           (static)             (static)                (all pages)
 ```
 
-## API Endpoints
+**Final PDF Structure:**
+1. Pages 1-3: Filled AcroForm
+   - Page 1: Dealer Copy
+   - Page 2: Internal (blank)
+   - Page 3: Customer Copy
+2. Pages 4-X: Contract Terms
+3. Pages X+1-Y: State Disclosure
 
-### Policies
-- `POST /api/policies` - Create policy (with optional `?dryRun=true`)
-- `GET /api/policies/:id` - Get policy metadata and PDF URL
+## 📁 Project Structure
 
-### Templates
-- `GET /api/templates/terms` - List terms templates
-- `GET /api/templates/disclosures` - List disclosure templates
-- `POST /api/templates/terms` - Upload terms template
-- `POST /api/templates/disclosures` - Upload disclosure template
+```
+wec-pdf-generator/
+├── apps/
+│   ├── api/              # Fastify API service
+│   └── web/              # React frontend
+├── packages/
+│   ├── shared/           # Shared Zod schemas and types
+│   └── cli/              # CLI tools (seed-templates)
+├── tests/                # Centralized test directory
+│   ├── api/              # API unit & E2E tests
+│   └── web/              # Frontend E2E tests
+├── assets/               # PDF template files
+│   └── 001_Contract 2/   # Current template versions
+├── scripts/              # Utility scripts
+├── docs/                 # Documentation
+└── docker-compose.yml    # Service orchestration
+```
 
-## Usage
+## 🔧 Common Tasks
 
-### Creating a Policy
+### Seed Templates
 
-1. Fill out the policy form in the web interface
-2. Click "Preview PDF" to generate a preview without saving
-3. Click "Create Policy" to save the policy and generate the final PDF
-4. Download the PDF or view it in the built-in viewer
+Upload PDF templates to MinIO:
 
-### Template Management
-
-Templates are stored in S3 and managed through the database. The system automatically selects the latest version of templates based on:
-- **Terms**: Product version + language
-- **Disclosures**: State code + language
-
-## Development
-
-### Running Tests
 ```bash
+./scripts/upload-new-templates.sh
+docker-compose restart api
+```
+
+### Run Tests
+
+```bash
+# All tests
 pnpm test
+
+# API tests only
+pnpm test:api
+
+# E2E tests (Playwright)
+pnpm test:e2e
+
+# E2E with UI
+pnpm test:e2e:ui
+
+# E2E in headed mode
+pnpm test:e2e:headed
 ```
 
-### Building for Production
+See [`tests/README.md`](./tests/README.md) for detailed testing documentation.
+
+### View Logs
+
 ```bash
-pnpm build
+# All services
+docker-compose logs -f
+
+# API only
+docker-compose logs -f api
+
+# Last 50 lines
+docker-compose logs --tail=50 api
 ```
 
-### Database Migrations
+### Generate a Test Policy
+
 ```bash
-pnpm db:migrate
+curl -X POST 'http://localhost:5173/api/policies?dryRun=true' \
+  -H "Content-Type: application/json" \
+  -d '{
+    "policyNumber": "TEST-001",
+    "productVersion": "WEC-PS-VSC-09-2025",
+    "stateCode": "FL",
+    "owner": {"firstName": "John", "lastName": "Doe", "address": "123 Main St", "city": "Miami", "state": "FL", "zip": "33101", "phone": "305-555-0100", "email": "john@example.com"},
+    "dealer": {"id": "DLR-001", "name": "Test Dealer", "address": "456 Dealer St", "city": "Miami", "state": "FL", "zip": "33102", "phone": "305-555-0200"},
+    "vehicle": {"vin": "1HGCM82633A123456", "year": "2023", "make": "Honda", "model": "Accord", "mileage": 10000, "salePrice": 25000},
+    "coverage": {"termMonths": 72, "purchaseDate": "2025-10-06", "expirationDate": "2031-10-06", "contractPrice": 2000, "commercial": false}
+  }' | jq
 ```
 
-### Seeding Templates
+## 📚 Documentation
+
+Comprehensive guides are available in the [`docs/`](./docs) folder:
+
+### Getting Started
+- [Setup Complete Guide](./docs/SETUP_COMPLETE.md)
+- [Deployment Quick Start](./docs/DEPLOYMENT_QUICK_START.md)
+- [Quick Reference](./docs/QUICK_REFERENCE.md)
+- [Docker Guide](./docs/DOCKER.md)
+
+### Features & Fixes
+- [Seeding Templates](./docs/SEEDING_COMPLETE.md)
+- [Three-Page Form Handling](./docs/THREE_PAGE_FORM_SUMMARY.md)
+- [PDF Enhancement](./docs/PDF_ENHANCEMENT_SUMMARY.md)
+- [Checkbox Fix](./docs/CHECKBOX_FIX_SUMMARY.md)
+- [Signature Fix](./docs/SIGNATURE_FIX_SUMMARY.md)
+- [CORS Fix](./docs/CORS_FIX_SUMMARY.md)
+- [S3 URL Fix](./docs/S3_URL_FIX_SUMMARY.md)
+- [Healthcheck Fix](./docs/HEALTHCHECK_FIX_SUMMARY.md)
+
+### Development
+- [Testing Guide](./docs/TESTING.md)
+- [E2E Testing](./docs/E2E_TESTING.md)
+- [Logging Guide](./docs/LOGGING_GUIDE.md)
+- [cURL Examples](./docs/CURL_EXAMPLES.md)
+
+### Docker Troubleshooting
+- [Docker Fixes](./docs/DOCKER_FIXES.md)
+- [Docker Module Fixes](./docs/DOCKER_MODULE_FIXES.md)
+- [Docker Summary](./docs/DOCKER_SUMMARY.md)
+
+## 🧪 API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/policies` | Create policy (merge PDFs, store to S3) |
+| `POST` | `/api/policies?dryRun=true` | Generate policy preview (no storage) |
+| `GET` | `/api/policies/:id` | Get policy metadata + pre-signed URL |
+| `GET` | `/health` | Health check |
+
+## 🛠️ Technology Stack
+
+### Backend
+- **Runtime**: Node.js 18 LTS
+- **Framework**: Fastify
+- **PDF**: pdf-lib, Playwright
+- **Database**: PostgreSQL 15
+- **Storage**: MinIO (S3-compatible)
+- **Validation**: Zod
+
+### Frontend
+- **Framework**: React 18
+- **Language**: TypeScript
+- **Forms**: React Hook Form + Zod
+- **PDF Viewer**: PDF.js
+- **Build**: Vite
+
+### DevOps
+- **Containerization**: Docker + Docker Compose
+- **Testing**: Vitest, Playwright
+- **CI/CD**: (Configure as needed)
+
+## ⚙️ Environment Variables
+
+Key environment variables (see [`apps/api/env.example`](./apps/api/env.example)):
+
 ```bash
-pnpm seed:templates
-```
+# Database
+DATABASE_URL=postgres://user:pass@postgres:5432/wecover
 
-## Environment Variables
-
-### API (.env)
-```env
-NODE_ENV=development
-PORT=5173
-DATABASE_URL=postgres://user:pass@localhost:5432/wecover
-S3_ENDPOINT=http://127.0.0.1:9000
-S3_ACCESS_KEY=minioadmin
-S3_SECRET_KEY=minioadmin
+# S3 Storage
+S3_ENDPOINT=http://minio:9000
 S3_BUCKET=wecover-pdfs
-S3_REGION=us-east-1
-PRODUCT_VERSION=WEC-PS-VSC-09-2025
-PDF_TEMPLATE_KEY=templates/ContractPSVSCTemplate_HT_v07_Form.pdf
+
+# PDF Templates
+PDF_TEMPLATE_KEY=templates/ContractPSVSCTemplate_HT_v07_01.pdf
+PDF_TERMS_KEY=templates/ContractPSVSCTemplate_HT_v07_02.pdf
+PDF_DISCLOSURE_KEY=templates/ContractPSVSCTemplate_HT_v07_03.pdf
 ```
 
-### Web (.env)
-```env
-VITE_API_BASE_URL=http://localhost:5173
+## 🧹 Cleanup
+
+```bash
+# Stop all services
+docker-compose down
+
+# Remove volumes (database + storage)
+docker-compose down -v
+
+# Remove images
+docker-compose down --rmi all
 ```
 
-## Production Deployment
+## 📄 License
 
-### Docker Deployment (Recommended)
+Proprietary - WeCoverUSA
 
-1. **Set up production environment**:
-   ```bash
-   # Update docker-compose.yml with production values
-   # - Change PostgreSQL credentials
-   # - Configure AWS S3 (replace MinIO)
-   # - Set secure secrets
-   # - Configure domain/SSL
-   ```
+---
 
-2. **Build production images**:
-   ```bash
-   docker-compose build
-   ```
+**Status**: 🟢 Fully Operational  
+**Last Updated**: October 6, 2025
 
-3. **Deploy the stack**:
-   ```bash
-   docker-compose up -d
-   ```
-
-4. **Run migrations**:
-   ```bash
-   docker-compose exec api node migrations/run.js
-   ```
-
-5. **Upload templates**:
-   - Upload PDF template to S3
-   - Seed HTML templates via API or CLI
-
-6. **Configure reverse proxy** (Nginx/Traefik) for SSL termination
-
-### Manual Deployment
-
-1. Set up PostgreSQL database
-2. Configure AWS S3 or S3-compatible storage
-3. Set production environment variables
-4. Run migrations: `pnpm db:migrate`
-5. Seed templates: `pnpm seed:templates`
-6. Build applications: `pnpm build`
-7. Deploy API and web applications with PM2 or systemd
-
-## Security Considerations
-
-- All inputs are validated with Zod schemas
-- S3 URLs are pre-signed with short expiration times
-- PII is stored encrypted in the database
-- CORS is configured for known origins only
-- No secrets are logged or exposed in client code
-
-## License
-
-Private - WeCover USA Internal Use Only

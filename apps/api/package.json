@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "vitest",
-    "test:e2e": "vitest run src/modules/policies/filler/__tests__/fillAcroForm.e2e.test.ts"
+    "test:e2e": "vitest run ../../tests/api/fillAcroForm.e2e.test.ts"
   },
   "dependencies": {
     "@wec/shared": "workspace:*",
