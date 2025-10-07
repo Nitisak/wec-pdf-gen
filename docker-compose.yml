@@ -80,7 +80,9 @@ services:
       S3_BUCKET: wecover-pdfs
       S3_REGION: us-east-1
       PRODUCT_VERSION: WEC-PS-VSC-09-2025
-      PDF_TEMPLATE_KEY: templates/ContractPSVSCTemplate_HT_v07_Form.pdf
+      PDF_TEMPLATE_KEY: templates/ContractPSVSCTemplate_HT_v07_01.pdf
+      PDF_TERMS_KEY: templates/ContractPSVSCTemplate_HT_v07_02.pdf
+      PDF_DISCLOSURE_KEY: templates/ContractPSVSCTemplate_HT_v07_03.pdf
       PLAYWRIGHT_CHROMIUM_EXECUTABLE: /usr/bin/chromium-browser
       CORS_ORIGIN: http://localhost
     ports:

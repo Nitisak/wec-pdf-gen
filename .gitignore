@@ -10,13 +10,8 @@ coverage
 .vscode
 .idea
 
-e2e/playwright-report
-e2e/test-results
-e2e/test-results-local
-e2e/test-results-prod
-e2e/test-results-staging
-e2e/test-results-staging-local
-e2e/test-results-staging-prod
-test-pdfs
-test-output
-e2e-output
+# Test outputs
+test-output/
+test-pdfs/
+playwright-report/
+test-results/
