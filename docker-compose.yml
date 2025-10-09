@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: pass
     ports:
-      - "5432:5432"
+      - "5532:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -30,7 +30,7 @@ services:
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
-      MINIO_API_CORS_ALLOW_ORIGIN: "http://localhost,http://localhost:3000,http://localhost:5173"
+      MINIO_API_CORS_ALLOW_ORIGIN: "http://localhost,http://localhost:3000,http://localhost:5273,http://localhost:9090"
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -70,7 +70,7 @@ services:
     container_name: wec-api
     environment:
       NODE_ENV: production
-      PORT: 5173
+      PORT: 5273
       HOST: 0.0.0.0
       LOG_LEVEL: info
       DATABASE_URL: postgres://user:pass@postgres:5432/wecover
@@ -84,9 +84,9 @@ services:
       PDF_TERMS_KEY: templates/ContractPSVSCTemplate_HT_v07_02.pdf
       PDF_DISCLOSURE_KEY: templates/ContractPSVSCTemplate_HT_v07_03.pdf
       PLAYWRIGHT_CHROMIUM_EXECUTABLE: /usr/bin/chromium-browser
-      CORS_ORIGIN: http://localhost
+      CORS_ORIGIN: http://localhost:9090
     ports:
-      - "5173:5173"
+      - "5273:5273"
     depends_on:
       postgres:
         condition: service_healthy
@@ -96,7 +96,7 @@ services:
       - wec-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5173/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5273/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -109,7 +109,7 @@ services:
       dockerfile: apps/web/Dockerfile
     container_name: wec-web
     ports:
-      - "80:80"
+      - "9090:80"
     depends_on:
       api:
         condition: service_started

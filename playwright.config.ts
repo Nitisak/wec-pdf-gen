@@ -10,7 +10,7 @@ export default defineConfig({
   reporter: 'html',
   
   use: {
-    baseURL: 'http://localhost',
+    baseURL: 'http://localhost:9090',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -33,7 +33,7 @@ export default defineConfig({
 
   webServer: {
     command: 'docker-compose up',
-    url: 'http://localhost',
+    url: 'http://localhost:9090',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
   },

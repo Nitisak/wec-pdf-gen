@@ -45,7 +45,7 @@ async function uploadToS3(key: string, content: string, contentType: string = 't
 
 async function seedTemplates() {
   const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgres://user:pass@localhost:5432/wecover'
+    connectionString: process.env.DATABASE_URL || 'postgres://user:pass@localhost:5532/wecover'
   });
 
   const db = drizzle(pool, { schema: { htmlTemplate } });

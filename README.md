@@ -12,12 +12,13 @@ docker-compose up -d
 docker-compose ps
 
 # Test the API
-curl http://localhost:5173/health
+curl http://localhost:5273/health
 ```
 
 The application will be available at:
-- **API**: http://localhost:5173
-- **Web**: http://localhost
+- **API**: http://localhost:5273
+- **Web**: http://localhost:9090
+- **PostgreSQL**: localhost:5532
 - **MinIO Console**: http://localhost:9001 (minioadmin/minioadmin)
 
 ## 🏗️ Architecture
@@ -111,7 +112,7 @@ docker-compose logs --tail=50 api
 ### Generate a Test Policy
 
 ```bash
-curl -X POST 'http://localhost:5173/api/policies?dryRun=true' \
+curl -X POST 'http://localhost:5273/api/policies?dryRun=true' \
   -H "Content-Type: application/json" \
   -d '{
     "policyNumber": "TEST-001",
@@ -192,7 +193,9 @@ Key environment variables (see [`apps/api/env.example`](./apps/api/env.example))
 
 ```bash
 # Database
-DATABASE_URL=postgres://user:pass@postgres:5432/wecover
+DATABASE_URL=postgres://user:pass@postgres:5432/wecover  # Internal Docker
+# Or for local connection:
+DATABASE_URL=postgres://user:pass@localhost:5532/wecover
 
 # S3 Storage
 S3_ENDPOINT=http://minio:9000
