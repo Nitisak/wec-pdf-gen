@@ -55,29 +55,29 @@ export declare const CoOwnerSchema: z.ZodObject<{
 export declare const DealerSchema: z.ZodObject<{
     id: z.ZodString;
     name: z.ZodString;
-    address: z.ZodString;
-    city: z.ZodString;
-    state: z.ZodString;
-    zip: z.ZodString;
-    phone: z.ZodString;
+    address: z.ZodOptional<z.ZodString>;
+    city: z.ZodOptional<z.ZodString>;
+    state: z.ZodOptional<z.ZodString>;
+    zip: z.ZodOptional<z.ZodString>;
+    phone: z.ZodOptional<z.ZodString>;
     salesRep: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    address: string;
-    city: string;
-    state: string;
-    zip: string;
-    phone: string;
     name: string;
     id: string;
+    address?: string | undefined;
+    city?: string | undefined;
+    state?: string | undefined;
+    zip?: string | undefined;
+    phone?: string | undefined;
     salesRep?: string | undefined;
 }, {
-    address: string;
-    city: string;
-    state: string;
-    zip: string;
-    phone: string;
     name: string;
     id: string;
+    address?: string | undefined;
+    city?: string | undefined;
+    state?: string | undefined;
+    zip?: string | undefined;
+    phone?: string | undefined;
     salesRep?: string | undefined;
 }>;
 export declare const VehicleSchema: z.ZodObject<{
@@ -194,29 +194,29 @@ export declare const PolicyCreateSchema: z.ZodObject<{
     dealer: z.ZodObject<{
         id: z.ZodString;
         name: z.ZodString;
-        address: z.ZodString;
-        city: z.ZodString;
-        state: z.ZodString;
-        zip: z.ZodString;
-        phone: z.ZodString;
+        address: z.ZodOptional<z.ZodString>;
+        city: z.ZodOptional<z.ZodString>;
+        state: z.ZodOptional<z.ZodString>;
+        zip: z.ZodOptional<z.ZodString>;
+        phone: z.ZodOptional<z.ZodString>;
         salesRep: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        address: string;
-        city: string;
-        state: string;
-        zip: string;
-        phone: string;
         name: string;
         id: string;
+        address?: string | undefined;
+        city?: string | undefined;
+        state?: string | undefined;
+        zip?: string | undefined;
+        phone?: string | undefined;
         salesRep?: string | undefined;
     }, {
-        address: string;
-        city: string;
-        state: string;
-        zip: string;
-        phone: string;
         name: string;
         id: string;
+        address?: string | undefined;
+        city?: string | undefined;
+        state?: string | undefined;
+        zip?: string | undefined;
+        phone?: string | undefined;
         salesRep?: string | undefined;
     }>;
     vehicle: z.ZodObject<{
@@ -289,13 +289,13 @@ export declare const PolicyCreateSchema: z.ZodObject<{
         email: string;
     };
     dealer: {
-        address: string;
-        city: string;
-        state: string;
-        zip: string;
-        phone: string;
         name: string;
         id: string;
+        address?: string | undefined;
+        city?: string | undefined;
+        state?: string | undefined;
+        zip?: string | undefined;
+        phone?: string | undefined;
         salesRep?: string | undefined;
     };
     vehicle: {
@@ -343,13 +343,13 @@ export declare const PolicyCreateSchema: z.ZodObject<{
         email: string;
     };
     dealer: {
-        address: string;
-        city: string;
-        state: string;
-        zip: string;
-        phone: string;
         name: string;
         id: string;
+        address?: string | undefined;
+        city?: string | undefined;
+        state?: string | undefined;
+        zip?: string | undefined;
+        phone?: string | undefined;
         salesRep?: string | undefined;
     };
     vehicle: {

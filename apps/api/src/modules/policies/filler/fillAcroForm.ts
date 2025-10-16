@@ -33,6 +33,7 @@ export async function fillAcroForm(payload: PolicyCreate): Promise<Uint8Array> {
       try {
         const textField = form.getTextField(name);
         textField.setText(String(value));
+        textField.enableReadOnly(); // Make field read-only
         continue;
       } catch (e) {
         // Not a text field
@@ -43,13 +44,12 @@ export async function fillAcroForm(payload: PolicyCreate): Promise<Uint8Array> {
         const checkbox = form.getCheckBox(name);
         if (value === 'On') {
           checkbox.check();
-          checkbox.enableReadOnly(); // Lock the checkbox state
           console.log(`✓ Checked: ${name}`);
         } else {
           checkbox.uncheck();
           console.log(`  Unchecked: ${name} ${value}`);
         }
-        
+        checkbox.enableReadOnly(); // Make checkbox read-only
         continue;
       } catch (e) {
         // Not a checkbox either

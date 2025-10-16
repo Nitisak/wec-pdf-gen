@@ -24,11 +24,11 @@ export const CoOwnerSchema = z.object({
 export const DealerSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
-  address: z.string().min(1),
-  city: z.string().min(1),
-  state: z.string().length(2),
-  zip: z.string().min(3),
-  phone: z.string().min(7),
+  address: z.string().min(1).optional(),
+  city: z.string().min(1).optional(),
+  state: z.string().length(2).optional(),
+  zip: z.string().min(3).optional(),
+  phone: z.string().min(7).optional(),
   salesRep: z.string().optional()
 });
 

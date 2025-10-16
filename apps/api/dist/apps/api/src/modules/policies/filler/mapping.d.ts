@@ -18,11 +18,11 @@ export declare const toAcroFields: (p: PolicyCreate) => {
     Text_Co_Owner_Email: string;
     Text_Dealer_ID: string;
     Text_Dealer_Name: string;
-    Text_Dealer_Address: string;
-    Text_Dealer_City: string;
-    Text_Dealer_State: string;
-    Text_Dealer_ZipCode: string;
-    Text_Dealer_Phone: string;
+    Text_Dealer_Address: string | undefined;
+    Text_Dealer_City: string | undefined;
+    Text_Dealer_State: string | undefined;
+    Text_Dealer_ZipCode: string | undefined;
+    Text_Dealer_Phone: string | undefined;
     Text_Dealer_Sale_Name: string;
     Text_Vehicle_ID: string;
     Text_Vehicle_Year: string;
