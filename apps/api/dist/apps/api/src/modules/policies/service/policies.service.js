@@ -89,9 +89,9 @@ async function assemblePolicyPdf(payload) {
     console.log(`assemblePolicyPdf payload  ${payload}`);
     const filledForm = await fillAcroForm(payload);
     // 2. Load Terms PDF (static PDF file, no rendering needed)
-    const termsPdf = await loadTermsPdf();
+    const termsPdf = await loadTermsPdf(payload.productVersion);
     // 3. Load Disclosure PDF (static PDF file, no rendering needed)
-    const disclosurePdf = await loadDisclosurePdf();
+    const disclosurePdf = await loadDisclosurePdf(payload.productVersion);
     // 4. Merge PDFs in order: Filled Form → Terms → Disclosures
     const mergedPdf = await mergePdfs([filledForm, termsPdf, disclosurePdf]);
     return mergedPdf;
@@ -101,13 +101,33 @@ function generatePolicyNumber(stateCode) {
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     return `WEC-${stateCode}-2025-${timestamp}${random}`;
 }
-async function loadTermsPdf() {
-    // Load the static Terms PDF from S3
-    const termsKey = process.env.PDF_TERMS_KEY || 'templates/ContractPSVSCTemplate_HT_v07_02.pdf';
-    return await getS3Object(termsKey);
+// Product template configuration
+const PRODUCT_TEMPLATES = {
+    'WEC-PS-VSC-09-2025': {
+        form: 'templates/ContractPSVSCTemplate_HT_v07_01.pdf',
+        terms: 'templates/ContractPSVSCTemplate_HT_v07_02.pdf',
+        disclosure: 'templates/ContractPSVSCTemplate_HT_v07_03.pdf'
+    },
+    'AGVSC-LIFETIME-V04-2025': {
+        form: 'templates/AGVSC_LifeTime_V04_01_Form.pdf',
+        terms: 'templates/AGVSC_LifeTime_V04_02_Contract.pdf',
+        disclosure: 'templates/AGVSC_LifeTime_V04_03_State.pdf'
+    }
+};
+export function getProductTemplates(productVersion) {
+    const templates = PRODUCT_TEMPLATES[productVersion];
+    if (!templates) {
+        throw new Error(`Unknown product version: ${productVersion}. Available: ${Object.keys(PRODUCT_TEMPLATES).join(', ')}`);
+    }
+    return templates;
 }
-async function loadDisclosurePdf() {
-    // Load the static Disclosure PDF from S3
-    const disclosureKey = process.env.PDF_DISCLOSURE_KEY || 'templates/ContractPSVSCTemplate_HT_v07_03.pdf';
-    return await getS3Object(disclosureKey);
+async function loadTermsPdf(productVersion) {
+    // Load the static Terms PDF from S3 based on product version
+    const templates = getProductTemplates(productVersion);
+    return await getS3Object(templates.terms);
+}
+async function loadDisclosurePdf(productVersion) {
+    // Load the static Disclosure PDF from S3 based on product version
+    const templates = getProductTemplates(productVersion);
+    return await getS3Object(templates.disclosure);
 }

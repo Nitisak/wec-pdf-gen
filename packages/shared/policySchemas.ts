@@ -42,8 +42,16 @@ export const VehicleSchema = z.object({
 });
 
 export const CoverageSchema = z.object({
-  termMonths: z.enum(["72","84","96"]).transform(Number),
-  commercial: z.boolean().default(false),
+  termMonths: z.union([
+    z.enum(["72","84","96","120","lifetime"]),
+    z.number().positive()
+  ]).transform(val => {
+    // Convert string terms to numbers, or pass through numbers
+    if (typeof val === 'number') return val;
+    if (val === 'lifetime') return 999; // Special value for lifetime
+    return Number(val);
+  }).optional().default(999), // Default to 999 (lifetime) if not provided
+  commercial: z.boolean().optional().default(false),
   contractPrice: z.number().nonnegative(),
   purchaseDate: z.string(), // ISO date
   expirationDate: z.string() // ISO date

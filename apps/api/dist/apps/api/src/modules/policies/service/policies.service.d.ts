@@ -20,3 +20,8 @@ export declare function getPolicy(policyId: string): Promise<{
     pdfKey: string | null;
     createdAt: Date;
 }>;
+export declare function getProductTemplates(productVersion: string): {
+    form: string;
+    terms: string;
+    disclosure: string;
+};

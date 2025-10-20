@@ -4,7 +4,7 @@ export const policy = pgTable('policy', {
     policyNumber: text('policy_number').notNull().unique(),
     productVersion: text('product_version').notNull(),
     stateCode: text('state_code').notNull(),
-    termMonths: integer('term_months').notNull(),
+    termMonths: integer('term_months').notNull().default(999), // 999 = lifetime
     commercial: boolean('commercial').notNull().default(false),
     effectiveDate: date('effective_date').notNull(),
     expirationDate: date('expiration_date').notNull(),

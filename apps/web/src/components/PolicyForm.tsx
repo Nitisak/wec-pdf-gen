@@ -9,8 +9,29 @@ interface PolicyFormProps {
   isLoading: boolean;
 }
 
+// Available products configuration
+const PRODUCTS = [
+  {
+    id: 'WEC-PS-VSC-09-2025',
+    name: 'Powertrain Service Contract',
+    shortName: 'PSVSC',
+    description: 'Comprehensive powertrain coverage for 72, 84, or 96 months',
+    icon: '🔧',
+    color: '#007bff'
+  },
+  {
+    id: 'AGVSC-LIFETIME-V04-2025',
+    name: 'Lifetime Warranty',
+    shortName: 'Lifetime',
+    description: 'Extended lifetime coverage for maximum protection',
+    icon: '🛡️',
+    color: '#28a745'
+  }
+];
+
 const PolicyForm: React.FC<PolicyFormProps> = ({ onPreview, onSubmit, isLoading }) => {
   const [selectedTerm, setSelectedTerm] = useState<string>('72');
+  const [selectedProduct, setSelectedProduct] = useState<string>('WEC-PS-VSC-09-2025');
   
   const {
     register,
@@ -37,6 +58,11 @@ const PolicyForm: React.FC<PolicyFormProps> = ({ onPreview, onSubmit, isLoading 
   const handleTermChange = (term: string) => {
     setSelectedTerm(term);
     setValue('coverage.termMonths', term as any);
+  };
+
+  const handleProductChange = (productId: string) => {
+    setSelectedProduct(productId);
+    setValue('productVersion', productId);
   };
 
   const calculateExpirationDate = (purchaseDate: string, termMonths: number) => {
@@ -66,6 +92,38 @@ const PolicyForm: React.FC<PolicyFormProps> = ({ onPreview, onSubmit, isLoading 
   return (
     <div className="form-container">
       <form onSubmit={handleSubmit(onFormSubmit)}>
+        {/* Product Selector */}
+        <div className="product-selector-section">
+          <h2 className="section-title">Select Product Type</h2>
+          <div className="product-cards">
+            {PRODUCTS.map((product) => (
+              <div
+                key={product.id}
+                className={`product-card ${selectedProduct === product.id ? 'selected' : ''}`}
+                onClick={() => handleProductChange(product.id)}
+                style={{ borderColor: selectedProduct === product.id ? product.color : '#ddd' }}
+              >
+                <div className="product-icon" style={{ fontSize: '48px' }}>
+                  {product.icon}
+                </div>
+                <div className="product-info">
+                  <h3 className="product-name">
+                    {product.shortName}
+                    {selectedProduct === product.id && (
+                      <span className="selected-badge" style={{ backgroundColor: product.color }}>
+                        ✓ Selected
+                      </span>
+                    )}
+                  </h3>
+                  <p className="product-full-name">{product.name}</p>
+                  <p className="product-description">{product.description}</p>
+                  <p className="product-id">Product Version: {product.id}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <h2 className="section-title">Policy Information</h2>
         
         <div className="form-row">

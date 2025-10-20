@@ -2,6 +2,7 @@ import { PDFDocument } from 'pdf-lib';
 import { getS3Object } from '../../storage/s3.js';
 import { toAcroFields } from './mapping.js';
 import { PolicyCreate } from '@wec/shared/policySchemas';
+import { getProductTemplates } from '../service/policies.service.js';
 
 // Signature overlay constants
 const SIGN_X = 360;
@@ -10,14 +11,14 @@ const SIGN_W = 140;
 const SIGN_H = 40;
 
 export async function fillAcroForm(payload: PolicyCreate): Promise<Uint8Array> {
-  // Use the new fillable PDF template (ContractPSVSCTemplate_HT_v07_01.pdf)
-  const templateKey = process.env.PDF_TEMPLATE_KEY || 'templates/ContractPSVSCTemplate_HT_v07_01.pdf';
-  const pdfBytes = await getS3Object(templateKey);
+  // Get the template key based on product version
+  const templates = getProductTemplates(payload.productVersion);
+  const pdfBytes = await getS3Object(templates.form);
   const pdfDoc = await PDFDocument.load(pdfBytes);
   const form = pdfDoc.getForm();
-  //console.log(`fillAcroForm payload ${payload}`);
   
   const fields = toAcroFields(payload);
+  console.log(`fillAcroForm for product ${payload.productVersion}`);
   console.log(`fillAcroForm fields ${JSON.stringify(fields)}`);
   // Fill text and checkbox fields
   for (const [name, value] of Object.entries(fields)) {

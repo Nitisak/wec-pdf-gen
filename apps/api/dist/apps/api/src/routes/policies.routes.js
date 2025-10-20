@@ -21,6 +21,8 @@ export async function policiesRoutes(fastify) {
         try {
             const payload = request.body;
             const dryRun = request.query?.dryRun === 'true';
+            console.log('Policy creation payload:', payload);
+            console.log('Dry run mode:', dryRun);
             const result = await createPolicy(payload, dryRun);
             return reply.code(200).send(result);
         }

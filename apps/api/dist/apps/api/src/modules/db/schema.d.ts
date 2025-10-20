@@ -58,7 +58,7 @@ export declare const policy: import("drizzle-orm/pg-core").PgTableWithColumns<{
             data: number;
             driverParam: string | number;
             notNull: true;
-            hasDefault: false;
+            hasDefault: true;
             enumValues: undefined;
             baseColumn: never;
         }, {}, {}>;

@@ -18,7 +18,7 @@ async function runMigrations() {
     console.log('Connected to database');
 
     // Read and execute migration files
-    const migrationFiles = ['001_init.sql'];
+    const migrationFiles = ['001_init.sql', '002_optional_term_months.sql'];
     
     for (const file of migrationFiles) {
       console.log(`Running migration: ${file}`);

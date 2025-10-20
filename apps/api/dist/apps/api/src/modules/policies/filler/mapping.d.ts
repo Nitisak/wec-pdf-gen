@@ -1,44 +1,5 @@
 import { PolicyCreate } from '@wec/shared/policySchemas';
-export declare const toAcroFields: (p: PolicyCreate) => {
-    Text_Contract_Number: string;
-    Text_Owner_Firstname: string;
-    Text_Owner_Lastname: string;
-    Text_Owner_Address: string;
-    Text_Owner_City: string;
-    Text_Owner_State: string;
-    Text_Owner_ZipCode: string;
-    Text_Owner_Phone: string;
-    Text_Owner_Email: string;
-    Text_Co_Owner_Name: string;
-    Text_Co_Owner_Address: string;
-    Text_Co_Owner_City: string;
-    Text_Co_Owner_state: string;
-    Text_Co_Owner_ZipCode: string;
-    Text_Co_Owner_Phone: string;
-    Text_Co_Owner_Email: string;
-    Text_Dealer_ID: string;
-    Text_Dealer_Name: string;
-    Text_Dealer_Address: string | undefined;
-    Text_Dealer_City: string | undefined;
-    Text_Dealer_State: string | undefined;
-    Text_Dealer_ZipCode: string | undefined;
-    Text_Dealer_Phone: string | undefined;
-    Text_Dealer_Sale_Name: string;
-    Text_Vehicle_ID: string;
-    Text_Vehicle_Year: string;
-    Text_Vehicle_Make: string;
-    Text_Vehicle_Model: string;
-    Text_Vehicle_Mileage: string;
-    Text_Vehicle_Sale_Price: string;
-    Text_Contract_Purchase_Date: string;
-    Text_ExpirationDate: string;
-    Text_Contract_Price: string;
-    Term_72m: string;
-    Term_84m: string;
-    Term_96m: string;
-    LossCode_COMMERCIAL: string;
-    Text_Lender_Name: string;
-    Text_Lender_Address: string;
-    Text_Lender_City_Sate_Zip: string;
-    CustomerSignature: string;
-};
+/**
+ * Maps PolicyCreate payload to AcroForm field names based on product version
+ */
+export declare const toAcroFields: (p: PolicyCreate) => Record<string, string>;

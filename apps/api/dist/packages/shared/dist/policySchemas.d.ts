@@ -102,8 +102,8 @@ export const VehicleSchema: z.ZodObject<{
     salePrice?: number | undefined;
 }>;
 export const CoverageSchema: z.ZodObject<{
-    termMonths: z.ZodEffects<z.ZodEnum<["72", "84", "96"]>, number, "72" | "84" | "96">;
-    commercial: z.ZodDefault<z.ZodBoolean>;
+    termMonths: z.ZodDefault<z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodEnum<["72", "84", "96", "120", "lifetime"]>, z.ZodNumber]>, number, number | "72" | "84" | "96" | "120" | "lifetime">>>;
+    commercial: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
     contractPrice: z.ZodNumber;
     purchaseDate: z.ZodString;
     expirationDate: z.ZodString;
@@ -114,10 +114,10 @@ export const CoverageSchema: z.ZodObject<{
     purchaseDate: string;
     expirationDate: string;
 }, {
-    termMonths: "72" | "84" | "96";
     contractPrice: number;
     purchaseDate: string;
     expirationDate: string;
+    termMonths?: number | "72" | "84" | "96" | "120" | "lifetime" | undefined;
     commercial?: boolean | undefined;
 }>;
 export const LenderSchema: z.ZodObject<{
@@ -241,8 +241,8 @@ export const PolicyCreateSchema: z.ZodObject<{
         salePrice?: number | undefined;
     }>;
     coverage: z.ZodObject<{
-        termMonths: z.ZodEffects<z.ZodEnum<["72", "84", "96"]>, number, "72" | "84" | "96">;
-        commercial: z.ZodDefault<z.ZodBoolean>;
+        termMonths: z.ZodDefault<z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodEnum<["72", "84", "96", "120", "lifetime"]>, z.ZodNumber]>, number, number | "72" | "84" | "96" | "120" | "lifetime">>>;
+        commercial: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
         contractPrice: z.ZodNumber;
         purchaseDate: z.ZodString;
         expirationDate: z.ZodString;
@@ -253,10 +253,10 @@ export const PolicyCreateSchema: z.ZodObject<{
         purchaseDate: string;
         expirationDate: string;
     }, {
-        termMonths: "72" | "84" | "96";
         contractPrice: number;
         purchaseDate: string;
         expirationDate: string;
+        termMonths?: number | "72" | "84" | "96" | "120" | "lifetime" | undefined;
         commercial?: boolean | undefined;
     }>;
     lender: z.ZodOptional<z.ZodObject<{
@@ -360,10 +360,10 @@ export const PolicyCreateSchema: z.ZodObject<{
         salePrice?: number | undefined;
     };
     coverage: {
-        termMonths: "72" | "84" | "96";
         contractPrice: number;
         purchaseDate: string;
         expirationDate: string;
+        termMonths?: number | "72" | "84" | "96" | "120" | "lifetime" | undefined;
         commercial?: boolean | undefined;
     };
     coOwner?: {
