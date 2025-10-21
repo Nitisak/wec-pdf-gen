@@ -390,4 +390,339 @@ export type Vehicle = z.infer<typeof VehicleSchema>;
 export type Coverage = z.infer<typeof CoverageSchema>;
 export type Lender = z.infer<typeof LenderSchema>;
 export type PolicyCreate = z.infer<typeof PolicyCreateSchema>;
+export declare const PriceBreakdownSchema: z.ZodObject<{
+    basePrice: z.ZodNumber;
+    coverageOptions: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodObject<{
+        name: z.ZodString;
+        price: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        name: string;
+        price: number;
+    }, {
+        name: string;
+        price: number;
+    }>, "many">>>;
+    fees: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodObject<{
+        name: z.ZodString;
+        amount: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        name: string;
+        amount: number;
+    }, {
+        name: string;
+        amount: number;
+    }>, "many">>>;
+    taxes: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+    dealerMarkup: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+    subtotal: z.ZodNumber;
+    total: z.ZodNumber;
+}, "strip", z.ZodTypeAny, {
+    basePrice: number;
+    coverageOptions: {
+        name: string;
+        price: number;
+    }[];
+    fees: {
+        name: string;
+        amount: number;
+    }[];
+    taxes: number;
+    dealerMarkup: number;
+    subtotal: number;
+    total: number;
+}, {
+    basePrice: number;
+    subtotal: number;
+    total: number;
+    coverageOptions?: {
+        name: string;
+        price: number;
+    }[] | undefined;
+    fees?: {
+        name: string;
+        amount: number;
+    }[] | undefined;
+    taxes?: number | undefined;
+    dealerMarkup?: number | undefined;
+}>;
+export declare const QuoteCreateSchema: z.ZodObject<{
+    quoteNumber: z.ZodString;
+    stateCode: z.ZodString;
+    productVersion: z.ZodString;
+    owner: z.ZodObject<{
+        firstName: z.ZodString;
+        lastName: z.ZodString;
+        address: z.ZodString;
+        city: z.ZodString;
+        state: z.ZodString;
+        zip: z.ZodString;
+        phone: z.ZodString;
+        email: z.ZodString;
+    }, "strip", z.ZodTypeAny, {
+        firstName: string;
+        lastName: string;
+        address: string;
+        city: string;
+        state: string;
+        zip: string;
+        phone: string;
+        email: string;
+    }, {
+        firstName: string;
+        lastName: string;
+        address: string;
+        city: string;
+        state: string;
+        zip: string;
+        phone: string;
+        email: string;
+    }>;
+    vehicle: z.ZodObject<{
+        vin: z.ZodString;
+        year: z.ZodString;
+        make: z.ZodString;
+        model: z.ZodString;
+        mileage: z.ZodNumber;
+        salePrice: z.ZodOptional<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        vin: string;
+        year: string;
+        make: string;
+        model: string;
+        mileage: number;
+        salePrice?: number | undefined;
+    }, {
+        vin: string;
+        year: string;
+        make: string;
+        model: string;
+        mileage: number;
+        salePrice?: number | undefined;
+    }>;
+    dealer: z.ZodObject<{
+        id: z.ZodString;
+        name: z.ZodString;
+        address: z.ZodOptional<z.ZodString>;
+        city: z.ZodOptional<z.ZodString>;
+        state: z.ZodOptional<z.ZodString>;
+        zip: z.ZodOptional<z.ZodString>;
+        phone: z.ZodOptional<z.ZodString>;
+        salesRep: z.ZodOptional<z.ZodString>;
+    } & {
+        logo: z.ZodOptional<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        name: string;
+        id: string;
+        address?: string | undefined;
+        city?: string | undefined;
+        state?: string | undefined;
+        zip?: string | undefined;
+        phone?: string | undefined;
+        salesRep?: string | undefined;
+        logo?: string | undefined;
+    }, {
+        name: string;
+        id: string;
+        address?: string | undefined;
+        city?: string | undefined;
+        state?: string | undefined;
+        zip?: string | undefined;
+        phone?: string | undefined;
+        salesRep?: string | undefined;
+        logo?: string | undefined;
+    }>;
+    coverage: z.ZodObject<{
+        termMonths: z.ZodDefault<z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodEnum<["72", "84", "96", "120", "lifetime"]>, z.ZodNumber]>, number, number | "72" | "84" | "96" | "120" | "lifetime">>>;
+        commercial: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+        deductible: z.ZodOptional<z.ZodNumber>;
+        coverageLevel: z.ZodOptional<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        termMonths: number;
+        commercial: boolean;
+        deductible?: number | undefined;
+        coverageLevel?: string | undefined;
+    }, {
+        termMonths?: number | "72" | "84" | "96" | "120" | "lifetime" | undefined;
+        commercial?: boolean | undefined;
+        deductible?: number | undefined;
+        coverageLevel?: string | undefined;
+    }>;
+    pricing: z.ZodObject<{
+        basePrice: z.ZodNumber;
+        coverageOptions: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodObject<{
+            name: z.ZodString;
+            price: z.ZodNumber;
+        }, "strip", z.ZodTypeAny, {
+            name: string;
+            price: number;
+        }, {
+            name: string;
+            price: number;
+        }>, "many">>>;
+        fees: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodObject<{
+            name: z.ZodString;
+            amount: z.ZodNumber;
+        }, "strip", z.ZodTypeAny, {
+            name: string;
+            amount: number;
+        }, {
+            name: string;
+            amount: number;
+        }>, "many">>>;
+        taxes: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+        dealerMarkup: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+        subtotal: z.ZodNumber;
+        total: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        basePrice: number;
+        coverageOptions: {
+            name: string;
+            price: number;
+        }[];
+        fees: {
+            name: string;
+            amount: number;
+        }[];
+        taxes: number;
+        dealerMarkup: number;
+        subtotal: number;
+        total: number;
+    }, {
+        basePrice: number;
+        subtotal: number;
+        total: number;
+        coverageOptions?: {
+            name: string;
+            price: number;
+        }[] | undefined;
+        fees?: {
+            name: string;
+            amount: number;
+        }[] | undefined;
+        taxes?: number | undefined;
+        dealerMarkup?: number | undefined;
+    }>;
+    validUntil: z.ZodString;
+    issueDate: z.ZodOptional<z.ZodString>;
+    disclaimers: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodString, "many">>>;
+    notes: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    stateCode: string;
+    productVersion: string;
+    owner: {
+        firstName: string;
+        lastName: string;
+        address: string;
+        city: string;
+        state: string;
+        zip: string;
+        phone: string;
+        email: string;
+    };
+    dealer: {
+        name: string;
+        id: string;
+        address?: string | undefined;
+        city?: string | undefined;
+        state?: string | undefined;
+        zip?: string | undefined;
+        phone?: string | undefined;
+        salesRep?: string | undefined;
+        logo?: string | undefined;
+    };
+    vehicle: {
+        vin: string;
+        year: string;
+        make: string;
+        model: string;
+        mileage: number;
+        salePrice?: number | undefined;
+    };
+    coverage: {
+        termMonths: number;
+        commercial: boolean;
+        deductible?: number | undefined;
+        coverageLevel?: string | undefined;
+    };
+    quoteNumber: string;
+    pricing: {
+        basePrice: number;
+        coverageOptions: {
+            name: string;
+            price: number;
+        }[];
+        fees: {
+            name: string;
+            amount: number;
+        }[];
+        taxes: number;
+        dealerMarkup: number;
+        subtotal: number;
+        total: number;
+    };
+    validUntil: string;
+    disclaimers: string[];
+    issueDate?: string | undefined;
+    notes?: string | undefined;
+}, {
+    stateCode: string;
+    productVersion: string;
+    owner: {
+        firstName: string;
+        lastName: string;
+        address: string;
+        city: string;
+        state: string;
+        zip: string;
+        phone: string;
+        email: string;
+    };
+    dealer: {
+        name: string;
+        id: string;
+        address?: string | undefined;
+        city?: string | undefined;
+        state?: string | undefined;
+        zip?: string | undefined;
+        phone?: string | undefined;
+        salesRep?: string | undefined;
+        logo?: string | undefined;
+    };
+    vehicle: {
+        vin: string;
+        year: string;
+        make: string;
+        model: string;
+        mileage: number;
+        salePrice?: number | undefined;
+    };
+    coverage: {
+        termMonths?: number | "72" | "84" | "96" | "120" | "lifetime" | undefined;
+        commercial?: boolean | undefined;
+        deductible?: number | undefined;
+        coverageLevel?: string | undefined;
+    };
+    quoteNumber: string;
+    pricing: {
+        basePrice: number;
+        subtotal: number;
+        total: number;
+        coverageOptions?: {
+            name: string;
+            price: number;
+        }[] | undefined;
+        fees?: {
+            name: string;
+            amount: number;
+        }[] | undefined;
+        taxes?: number | undefined;
+        dealerMarkup?: number | undefined;
+    };
+    validUntil: string;
+    issueDate?: string | undefined;
+    disclaimers?: string[] | undefined;
+    notes?: string | undefined;
+}>;
+export type PriceBreakdown = z.infer<typeof PriceBreakdownSchema>;
+export type QuoteCreate = z.infer<typeof QuoteCreateSchema>;
 //# sourceMappingURL=policySchemas.d.ts.map

@@ -5,6 +5,10 @@
   "main": "./dist/policySchemas.js",
   "types": "./dist/policySchemas.d.ts",
   "exports": {
+    ".": {
+      "import": "./dist/policySchemas.js",
+      "types": "./dist/policySchemas.d.ts"
+    },
     "./policySchemas": {
       "import": "./dist/policySchemas.js",
       "types": "./dist/policySchemas.d.ts"

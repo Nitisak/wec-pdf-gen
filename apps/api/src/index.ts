@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { policiesRoutes } from './routes/policies.routes.js';
 import { templatesRoutes } from './routes/templates.routes.js';
+import quotesRoutes from './routes/quotes.routes.js';
 import { closeDatabase } from './modules/db/index.js';
 
 const fastify = Fastify({
@@ -19,6 +20,7 @@ await fastify.register(cors, {
 // Register routes
 await fastify.register(policiesRoutes, { prefix: '/api' });
 await fastify.register(templatesRoutes, { prefix: '/api' });
+await fastify.register(quotesRoutes, { prefix: '/api' });
 
 // Health check
 fastify.get('/health', async (request, reply) => {
